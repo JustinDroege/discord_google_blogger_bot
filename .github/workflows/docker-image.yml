@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag discord_google_blogger_bot:$(date +%s)
+      run: docker build . --file dockerfile --tag discord_google_blogger_bot:$(date +%s)
