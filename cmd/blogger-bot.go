@@ -6,17 +6,15 @@ import (
 	"github.com/JustinDroege/BloggerBot/pkg/api/message_service"
 	"github.com/JustinDroege/BloggerBot/pkg/utils"
 	"github.com/bwmarrin/discordgo"
-	"github.com/golang-module/carbon/v2"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
 var bloggerClient *api.BloggerAPI
 var messageBroker *message_service.MessageBroker
-var sleepTime int64 = 15
-var lastDate = ""
+var sleepTime int64 = 10
+var lastPostId string = ""
 
 func main() {
 	err := setupServices()
@@ -68,7 +66,7 @@ func setupServices() error {
 func searchForNewPosts() error {
 	for {
 		time.Sleep(time.Duration(sleepTime) * time.Second)
-		posts, err := (*bloggerClient).GetPosts("", strings.Replace(lastDate, "+", "%2B", 1))
+		posts, err := (*bloggerClient).GetPosts("", "")
 
 		if err != nil {
 			return err
@@ -78,21 +76,18 @@ func searchForNewPosts() error {
 			continue
 		}
 
-		if compareDates(lastDate, posts.Items[0].Published) {
+		if lastPostId == posts.Items[0].Id {
 			continue
 		}
 
-		lastDate = carbon.Parse(posts.Items[0].Published).ToRfc3339String()
+		lastPostId = posts.Items[0].Id
 
 		htmlConverted, err := utils.ConvertHtml(posts.Items[0].Content)
 
 		if err != nil {
 			return err
 		}
+
 		messageBroker.SendMessage(htmlConverted)
 	}
-}
-
-func compareDates(date1 string, date2 string) bool {
-	return carbon.Parse(date1).Gte(carbon.Parse(date2))
 }
